@@ -13,13 +13,16 @@ import logging
 if os.name == "nt":
     import ctypes
     try:
-        if ctypes.windll.shell32.IsUserAnAdmin()():
-            print("ERROR: ETS2LA is running with Administrator privileges.\n"
+        if ctypes.windll.shell32.IsUserAnAdmin():
+            print(
+                "ERROR: ETS2LA is running with Administrator privileges.\n"
                 "This is not recommended, as it may interfere with system behavior or cause unintended issues.\n"
-                "Please restart ETS2LA without Administrator mode.")
+                "Please restart ETS2LA without Administrator mode."
+            )
             input("Press enter to exit...")
             sys.exit(1)
     except Exception as e:
+        # Log the failure to check admin privileges, then continue without crashing
         logging.exception("Admin privilege check failed: %s", e)
 
 # This try/except block will either end in a successful import, update, or error
