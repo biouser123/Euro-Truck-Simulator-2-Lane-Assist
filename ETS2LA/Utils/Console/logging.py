@@ -74,8 +74,8 @@ def setup_global_logging(write_file: bool = True) -> logging.Logger:
                 if file.endswith(".log"):
                     try:
                         os.remove(f"logs/{file}")
-                    except:
-                        logging.error(f"Another ETS2LA instance is running. Please close it and try again.")
+                    except OSError as e:
+                        logging.error(f"Another ETS2LA instance is running. Please close it and try again: {e}")
                         
         file_handler = logging.FileHandler("logs/ETS2LA.log", encoding="utf-8")
         file_handler.setLevel(logging.DEBUG)
@@ -94,7 +94,7 @@ class CustomHighligher(Highlighter):
         plain = text.plain
         try:
             defaultText, traceback = plain.split("Traceback (most recent call last):")
-        except:
+        except ValueError:
             defaultText = plain
             traceback = plain
         print(traceback.strip())

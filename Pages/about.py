@@ -10,10 +10,11 @@ from ETS2LA.Utils.translator import _, ngettext, languages, parse_language
 from ETS2LA.Utils.umami import TriggerEvent
 from ETS2LA.Utils.version import Update
 from ETS2LA.Utils import settings
-from langcodes import Language 
+from langcodes import Language
 import hashlib
 import time
 import os
+import logging
 
 contributors = [
     {"name": "Tumppi066", "description": _("Lead developer and creator of ETS2LA, backend & frontend."), "links": [["Github", "https://github.com/Tumppi066"], ["Youtube", "https://www.youtube.com/@Tumppi066"], ["Ko-Fi", "https://ko-fi.com/tumppi066"]]},
@@ -106,8 +107,8 @@ class Page(ETS2LAPage):
         print(_("Triggering update"))
         try:
             TriggerEvent("Update App")
-        except:
-            pass
+        except Exception as e:
+            logging.exception("Failed to trigger update event: %s", e)
         mainThreadQueue.append([Update, [], {}])
     
     def open_event(self):
@@ -115,8 +116,8 @@ class Page(ETS2LAPage):
         for path in games:
             try:
                 self.game_needs_update[path] = needs_update(path)
-            except:
-                pass
+            except Exception as e:
+                logging.exception("Failed to determine if %s needs update: %s", path, e)
     
     def seconds_to_time(self, seconds):
         if seconds == 0:

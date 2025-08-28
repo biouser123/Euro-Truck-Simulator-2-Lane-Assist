@@ -72,10 +72,10 @@ def login(code):
         settings.Set("global", "user_id", response.json()["user_id"])
         settings.Set("global", "token", response.json()["token"])
         return HTMLResponse(content=open("ETS2LA/Assets/auth_complete.html").read().replace("response_code", response.json()["success"]), status_code=200)
-    except:
+    except (requests.RequestException, FileNotFoundError, KeyError) as e:
         exception = traceback.format_exc()
         logging.error(exception)
-        return exception
+        return str(e)
 
 @app.get("/backend/quit")
 def quitApp():
@@ -115,7 +115,8 @@ def set_theme(theme: Literal["dark", "light"]):
     try:
         color_title_bar(theme)
         return True
-    except:
+    except Exception as e:
+        logging.exception("Failed to set theme: %s", e)
         return False
 
 @app.get("/backend/ip")
@@ -155,8 +156,8 @@ def set_transparency_to(state: bool):
     try:
         newState = set_transparency(state)
         return newState
-    except:
-        logging.exception(_("Failed to set transparency"))
+    except Exception as e:
+        logging.exception(_("Failed to set transparency: %s"), e)
         return False
 
 @app.get("/window/transparency")
@@ -214,8 +215,8 @@ def get_plugins():
                 return_data[id]["frametimes"] = 0
         
         return return_data
-    except:
-        logging.exception("Failed to get plugins")
+    except Exception as e:
+        logging.exception("Failed to get plugins: %s", e)
         return False
 
 @app.get("/backend/plugins/{plugin}/enable")
@@ -326,8 +327,8 @@ def get_tag_data(data: TagFetchData):
             return return_data
 
         return HTMLResponse(content=return_data, status_code=200, headers=headers)
-    except:
-        logging.exception(_("Failed to get tag data"))
+    except Exception as e:
+        logging.exception(_("Failed to get tag data: %s"), e)
         return False
 
 @app.get("/api/tags/{tag}")
@@ -361,8 +362,8 @@ def get_tags_list():
 def get_list_of_pages():
     try:
         return plugins.get_page_list()
-    except:
-        logging.exception(_("Failed to get pages"))
+    except Exception as e:
+        logging.exception(_("Failed to get pages: %s"), e)
         return {}
 
 # endregion
@@ -372,8 +373,8 @@ def get_list_of_pages():
 def reload_plugins():
     try:
         plugins.reload_plugins()
-    except:
-        logging.exception(_("Failed to reload plugins"))
+    except Exception as e:
+        logging.exception(_("Failed to reload plugins: %s"), e)
         return False
     return True
 

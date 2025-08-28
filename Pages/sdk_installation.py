@@ -182,8 +182,8 @@ class Page(ETS2LAPage):
         for path in games:
             try:
                 self.game_needs_update[path] = needs_update(path)
-            except:
-                pass
+            except Exception as e:
+                logging.exception("Failed to determine if %s needs update: %s", path, e)
 
     def render(self):
         if not self.onboarding_mode:

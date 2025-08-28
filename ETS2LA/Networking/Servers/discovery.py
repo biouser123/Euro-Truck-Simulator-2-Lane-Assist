@@ -34,9 +34,8 @@ def socket_thread():
     try:
         while True:
             time.sleep(2)
-            pass
-    except:
-        pass
+    except Exception as e:
+        logging.exception("Zeroconf discovery error: %s", e)
     
     zeroconf.unregister_service(info)
     zeroconf.close()

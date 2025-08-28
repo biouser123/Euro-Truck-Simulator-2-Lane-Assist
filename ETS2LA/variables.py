@@ -3,6 +3,7 @@ import json
 import git
 import sys
 import os
+import logging
 
 YEAR = datetime.datetime.now().year
 """This year will be displayed in the window title."""
@@ -125,7 +126,8 @@ try:
                 dlc = line.split(".scs")[0].split("dlc_")[1]
                 dlc = "dlc_" + dlc
                 ATS_DLC.append(dlc)
-except: pass
+except OSError as e:
+    logging.exception("Failed to read ATS log: %s", e)
 
 try:
     with open(ETS2_LOG_PATH, "r") as f:
@@ -135,11 +137,13 @@ try:
                 dlc = line.split(".scs")[0].split("dlc_")[1]
                 dlc = "dlc_" + dlc
                 ETS2_DLC.append(dlc)
-except: pass
+except OSError as e:
+    logging.exception("Failed to read ETS2 log: %s", e)
 
 # Update metadata
 try:
     repo = git.Repo(search_parent_directories=True)
     hash = repo.head.object.hexsha[:9]
     METADATA["version"] = f"{METADATA['version']} - {hash}"
-except: pass
+except git.exc.GitError as e:
+    logging.exception("Failed to update metadata version: %s", e)

@@ -101,8 +101,11 @@ async def handler(ws: websockets.WebSocketServerProtocol, path):
     connected[ws] = []
     try:
         while True:
-            try: message = await ws.recv()
-            except: break
+            try:
+                message = await ws.recv()
+            except websockets.ConnectionClosed as e:
+                logging.exception("Websocket closed: %s", e)
+                break
             
             if message:
                 data = json.loads(message)
@@ -128,8 +131,8 @@ async def handler(ws: websockets.WebSocketServerProtocol, path):
                         
                 elif data.get("type") == "function":
                     handle_functions(data["data"])
-    except:
-        logging.exception("An error occurred while processing a message.")
+    except Exception as e:
+        logging.exception("An error occurred while processing a message: %s", e)
     finally:
         connected.pop(ws, None)
 

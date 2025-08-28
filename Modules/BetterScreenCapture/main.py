@@ -6,6 +6,7 @@ import numpy as np
 import time
 import cv2
 import mss
+import logging
 
 if variables.OS == "nt":
     import win32gui
@@ -105,33 +106,34 @@ def Initialize(Screen=None, Area=(None, None, None, None)):
                     print("Capture Session Closed")
                     
                 try:
-                    Control.stop() # type: ignore
-                except:
-                    pass
+                    Control.stop()  # type: ignore
+                except Exception as e:
+                    logging.exception("Failed to stop capture control: %s", e)
                 Control = Capture.start_free_threaded()
 
                 CaptureLibrary = "WindowsCapture"
 
-            except:
+            except Exception as e:
+                logging.exception("Falling back to bettercam: %s", e)
                 import bettercam
                 
                 if Cam is not None:
                     try:
                         Cam.stop()
-                    except:
-                        pass
+                    except Exception as e:
+                        logging.exception("Failed to stop camera: %s", e)
                     try:
                         Cam.close()
-                    except:
-                        pass
+                    except Exception as e:
+                        logging.exception("Failed to close camera: %s", e)
                     try:
                         Cam.release()
-                    except:
-                        pass
+                    except Exception as e:
+                        logging.exception("Failed to release camera: %s", e)
                     try:
                         del Cam
-                    except:
-                        pass
+                    except Exception as e:
+                        logging.exception("Failed to delete camera reference: %s", e)
                     
                 Cam = bettercam.create(output_idx=Display, output_color="BGR")
                 Cam.start()
@@ -142,8 +144,8 @@ def Initialize(Screen=None, Area=(None, None, None, None)):
 
             CaptureLibrary = "MSS"
 
-    except:
-
+    except Exception as e:
+        logging.exception("Failed to initialize capture library: %s", e)
         CaptureLibrary = "MSS"
 
 
@@ -183,8 +185,8 @@ def Capture(ImageType:str = "both"):
                 croppedImg = img[MonitorY1:MonitorY2, MonitorX1:MonitorX2]
                 return croppedImg, img
 
-        except:
-
+        except Exception as e:
+            logging.exception("Windows capture failed: %s", e)
             return None if ImageType.lower() == "cropped" or ImageType.lower() == "full" else (None, None)
 
     elif CaptureLibrary.lower() == "bettercam":
@@ -207,8 +209,8 @@ def Capture(ImageType:str = "both"):
                 croppedImg = img[MonitorY1:MonitorY2, MonitorX1:MonitorX2]
                 return croppedImg, img
 
-        except:
-
+        except Exception as e:
+            logging.exception("Bettercam capture failed: %s", e)
             return None if ImageType.lower() == "cropped" or ImageType.lower() == "full" else (None, None)
 
     elif CaptureLibrary.lower() == "mss":
@@ -230,8 +232,8 @@ def Capture(ImageType:str = "both"):
                 croppedImg = img[MonitorY1:MonitorY2, MonitorX1:MonitorX2]
                 return croppedImg, img
 
-        except:
-
+        except Exception as e:
+            logging.exception("MSS capture failed: %s", e)
             return None if ImageType.lower() == "cropped" or ImageType.lower() == "full" else (None, None)
 
 

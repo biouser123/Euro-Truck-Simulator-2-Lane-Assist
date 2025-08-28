@@ -85,7 +85,8 @@ def get_maximum_speed_for_points(points, x, z) -> float:
         # sqrt(MU * G / max_curvature) = max_speed
         try:
             max_speed = np.sqrt(MU * G / max_curvature)  # In m/s
-        except:
+        except (ZeroDivisionError, ValueError) as e:
+            logging.exception("Failed to compute max speed: %s", e)
             return 999
 
         if max_speed == 0:
@@ -94,5 +95,5 @@ def get_maximum_speed_for_points(points, x, z) -> float:
         return max_speed
     
     except Exception as e:
-        logging.exception("Failed to calculate maximum speed")
+        logging.exception("Failed to calculate maximum speed: %s", e)
         return 999

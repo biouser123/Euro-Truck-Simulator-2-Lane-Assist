@@ -126,8 +126,12 @@ class Plugin(ETS2LAPlugin):
     def run(self):
         apiData = self.TruckSimAPI.run()
 
-        try: self.target_speed = self.GetTargetSpeed(apiData)
-        except: self.Reset(); logging.exception("something"); return
+        try:
+            self.target_speed = self.GetTargetSpeed(apiData)
+        except Exception as e:
+            self.Reset()
+            logging.exception("Failed to get target speed: %s", e)
+            return
 
         self.currentSpeedNative = apiData['truckFloat']['speed']
         self.currentSpeed = self.currentSpeedNative * 3.6  # convert to km/h

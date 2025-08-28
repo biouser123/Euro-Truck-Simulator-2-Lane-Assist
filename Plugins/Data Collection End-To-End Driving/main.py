@@ -1,5 +1,6 @@
 from ETS2LA.Plugin import *
 from ETS2LA.UI import *
+import logging
 
 
 RED = "\033[91m"
@@ -9,12 +10,12 @@ NORMAL = "\033[0m"
 def DeletePair(Name=""):
     try:
         os.remove(f"{variables.PATH}Data-Collection-End-To-End-Driving/{str(Name)}")
-    except:
-        pass
+    except OSError as e:
+        logging.exception("Failed to remove JSON file %s: %s", Name, e)
     try:
         os.remove(f"{variables.PATH}Data-Collection-End-To-End-Driving/{str(Name).replace('.json', '.png')}")
-    except:
-        pass
+    except OSError as e:
+        logging.exception("Failed to remove image file for %s: %s", Name, e)
 
 
 def CheckForUploads():
@@ -22,7 +23,8 @@ def CheckForUploads():
         Response = requests.get("https://cdn.ets2la.com/", timeout=3)
         if Response.status_code != 200:
             raise Exception("Couldn't connect to the server.")
-    except:
+    except requests.RequestException as e:
+        logging.exception("Connectivity check failed: %s", e)
         return
 
     CurrentTime = time.time()
@@ -33,13 +35,13 @@ def CheckForUploads():
         if str(File).endswith(".json") and str(File).replace(".json", ".png") not in os.listdir(f"{variables.PATH}Data-Collection-End-To-End-Driving"):
             try:
                 os.remove(f"{variables.PATH}Data-Collection-End-To-End-Driving/{str(File)}")
-            except:
-                pass
+            except OSError as e:
+                logging.exception("Failed to remove unmatched JSON file %s: %s", File, e)
         if str(File).endswith(".png") and str(File).replace(".png", ".json") not in os.listdir(f"{variables.PATH}Data-Collection-End-To-End-Driving"):
             try:
                 os.remove(f"{variables.PATH}Data-Collection-End-To-End-Driving/{str(File)}")
-            except:
-                pass
+            except OSError as e:
+                logging.exception("Failed to remove unmatched image file %s: %s", File, e)
 
     FilesReadyForUpload = []
     for File in os.listdir(f"{variables.PATH}Data-Collection-End-To-End-Driving"):
@@ -55,7 +57,8 @@ def CheckForUploads():
                 if "CameraX" not in Data:
                     raise Exception("The data file is missing the 'CameraX' key. Can't upload the data.")
 
-            except:
+            except (OSError, json.JSONDecodeError, KeyError, ValueError) as e:
+                logging.exception("Failed to process data file %s: %s", File, e)
                 DeletePair(Name=File)
 
     for File in FilesReadyForUpload:
@@ -65,7 +68,9 @@ def CheckForUploads():
                 ("files", open(f"{variables.PATH}Data-Collection-End-To-End-Driving/{str(File)}", "r")),
                 ("files", open(f"{variables.PATH}Data-Collection-End-To-End-Driving/{str(File).replace('.json', '.png')}", "rb"))
             ]
-            Response = requests.post(f"https://cdn.ets2la.com/datasets/OleFranz/End-To-End/upload/{DataID}", files=Files, timeout=30)
+            Response = requests.post(
+                f"https://cdn.ets2la.com/datasets/OleFranz/End-To-End/upload/{DataID}", files=Files, timeout=30
+            )
             for F in Files:
                 F[1].close()
             if "success" in Response.json():
@@ -74,7 +79,8 @@ def CheckForUploads():
             elif "error" in Response.json():
                 if "Server storage is full." in Response.json()["error"]:
                     DeletePair(Name=File)
-        except:
+        except (requests.RequestException, OSError, json.JSONDecodeError) as e:
+            logging.exception("Failed to upload %s: %s", File, e)
             DeletePair(Name=File)
 
 
@@ -88,20 +94,24 @@ def GetDataID():
             with open(f"{variables.PATH}End-To-End-Data-ID.txt", "r") as File:
                 Content = File.read()
                 DataID = Content.replace("\n", "").replace(" ", "").split(">")[0]
-        except:
+        except OSError as e:
             try:
                 os.remove(f"{variables.PATH}End-To-End-Data-ID.txt")
-            except:
-                pass
+            except OSError as remove_error:
+                logging.exception("Failed to remove invalid ID file: %s", remove_error)
+            logging.exception("Failed to read data ID: %s", e)
             DataID = None
     if DataID == None:
         try:
-            Response = requests.get(f"https://cdn.ets2la.com/datasets/OleFranz/End-To-End/get-id").json()
+            Response = requests.get(
+                f"https://cdn.ets2la.com/datasets/OleFranz/End-To-End/get-id"
+            ).json()
             if "success" in Response:
                 DataID = Response["success"]
             else:
                 raise Exception("Couldn't get an ID from the server.")
-        except:
+        except (requests.RequestException, ValueError) as e:
+            logging.exception("Failed to retrieve data ID: %s", e)
             return "None"
         with open(f"{variables.PATH}End-To-End-Data-ID.txt", "w") as File:
             File.write(DataID + """

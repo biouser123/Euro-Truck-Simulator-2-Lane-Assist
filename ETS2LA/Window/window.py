@@ -16,8 +16,10 @@ if os.name == 'nt':
 
     # some windows magic so that the icon is also shown int the taskbar, the str needs to be a unique id
     # i dont know how fail safe this is so just run in the try block
-    try: ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("Python.GitHub.App.ETS2LAv2")
-    except: pass
+    try:
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("Python.GitHub.App.ETS2LAv2")
+    except Exception as e:
+        logging.exception("Failed to set app user model ID: %s", e)
 
 fl = settings.Get("global", "frameless", True)
 dm = settings.Get("global", "debug_mode", False)
@@ -58,8 +60,11 @@ def window_handler(window: webview.Window):
         while True:
             try:
                 response = requests.get(f'http://localhost:{FRONTEND_PORT}', timeout=2)
-                if response.ok: break
-            except: time.sleep(0.5)
+                if response.ok:
+                    break
+            except requests.RequestException as e:
+                logging.debug("Waiting for local frontend: %s", e)
+                time.sleep(0.5)
             
         set_resizable(True)
         window.load_url('http://localhost:' + str(FRONTEND_PORT))
@@ -67,8 +72,11 @@ def window_handler(window: webview.Window):
         while True:
             try:
                 response = requests.get("http://localhost:37520", timeout=2)
-                if response.ok: break
-            except: time.sleep(0.1)
+                if response.ok:
+                    break
+            except requests.RequestException as e:
+                logging.debug("Waiting for remote frontend: %s", e)
+                time.sleep(0.1)
 
         window.load_url(variables.FRONTEND_URL)
         if "ets2la.com" not in variables.FRONTEND_URL:
@@ -79,34 +87,34 @@ def window_handler(window: webview.Window):
         time.sleep(0.01)
         try:
             data = queue.get_nowait()
-            
+
             if data["type"] == "stay_on_top":
-                if data["state"] == None:
+                if data["state"] is None:
                     queue.task_done()
                     queue.put(window.on_top)
                     continue
-                
+
                 window.on_top = data["state"]
                 settings.Set("global", "stay_on_top", data["state"] == True)
                 queue.task_done()
                 queue.put(data["state"])
-                
+
             if data["type"] == "fullscreen":
                 window.toggle_fullscreen()
                 queue.task_done()
                 queue.put(window.fullscreen)
-                
+
             if data["type"] == "minimize":
                 window.minimize()
                 queue.task_done()
                 queue.put(True)
-                
+
             if data["type"] == "resize":
                 window.resize(data["width"], data["height"])
                 queue.task_done()
                 queue.put(True)
-                
-        except:
+
+        except queue.Empty:
             pass
         
         if last_check + 0.1 < time.time():  # Check 10x per second

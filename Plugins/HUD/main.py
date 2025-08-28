@@ -8,6 +8,7 @@ from ETS2LA.Plugin import *
 import random
 import time
 import os
+import logging
 
 def in_out(t, minimum, maximum):
     """Ease in and out function."""
@@ -227,15 +228,15 @@ class Plugin(ETS2LAPlugin):
             if widget not in [runner.element.name for runner in self.widgets]:
                 try:
                     self.set_widget(widget)
-                except:
-                    logging.debug(f"HUD: Widget '{widget}' not found in runners.")
+                except KeyError as e:
+                    logging.debug(f"HUD: Widget '{widget}' not found in runners: {e}")
         
         for widget in self.widgets:
             if widget.element.name not in enabled:
                 try:
                     self.remove_widget(widget.element.name)
-                except:
-                    logging.debug(f"HUD: Widget '{widget.element.name}' not found in runners.")
+                except KeyError as e:
+                    logging.debug(f"HUD: Widget '{widget.element.name}' not found in runners: {e}")
 
     def ensure_renderers_selected(self):
         renderers = self.settings.renderers
@@ -248,15 +249,15 @@ class Plugin(ETS2LAPlugin):
             if renderer not in renderers:
                 try:
                     self.disable_renderer(renderer)
-                except:
-                    logging.debug(f"HUD: Renderer '{renderer}' not found in runners.")
+                except KeyError as e:
+                    logging.debug(f"HUD: Renderer '{renderer}' not found in runners: {e}")
 
         for renderer in renderers:
             if renderer not in enabled:
                 try:
                     self.enable_renderer(renderer)
-                except:
-                    logging.debug(f"HUD: Renderer '{renderer}' not found in runners.")
+                except KeyError as e:
+                    logging.debug(f"HUD: Renderer '{renderer}' not found in runners: {e}")
         
     def is_day(self) -> bool:
         if not self.data:

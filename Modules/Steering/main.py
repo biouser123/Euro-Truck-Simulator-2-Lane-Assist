@@ -1,4 +1,5 @@
 from ETS2LA.Module import *
+import logging
 
 class SteeringValue:
     def __init__(self, value:float, timestamp:float):
@@ -54,15 +55,15 @@ class Module(ETS2LAModule):
         # Check if the SDK module is available
         try:
             SDK = self.plugin.modules.SDKController.SCSController()
-        except:
+        except AttributeError as e:
             SDK = None
-            logging.warning("SDK module not available, please add it to the plugin description.")
+            logging.warning("SDK module not available, please add it to the plugin description: %s", e)
         # Check if the API module is available
         try:
             API = self.plugin.modules.TruckSimAPI
-        except:
+        except AttributeError as e:
             API = None
-            logging.warning("TruckSimAPI module not available, please add it to the plugin description.")
+            logging.warning("TruckSimAPI module not available, please add it to the plugin description: %s", e)
 
     def get_text_size(self, text = "NONE", width=100, height=100, text_width=100, max_text_height=100):
         fontscale = 1
@@ -160,10 +161,10 @@ class Module(ETS2LAModule):
             
         # Draw the steering line
         if drawLine:
-            try: 
+            try:
                 SI = self.plugin.modules.ShowImage
-            except:
-                logging.warning("DefaultSteering: ShowImage module not available, please add it to the plugin description or disable the drawLine parameter.")
+            except AttributeError as e:
+                logging.warning("DefaultSteering: ShowImage module not available, please add it to the plugin description or disable the drawLine parameter: %s", e)
                 return "ShowImage module not available, please add it to the plugin description or disable the drawLine parameter."
             self.DrawSteeringLine(SI, value, angle, drawText)
         

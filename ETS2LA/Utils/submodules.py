@@ -74,15 +74,17 @@ def CheckForSubmoduleUpdate(folder: str, cdn_url: str = "", cdn_path: str = ""):
     # Check for updates
     try:
         repo = git.Repo(folder)
-    except:
+    except git.exc.GitError as e:
+        logging.exception("Failed to open submodule repo %s: %s", folder, e)
         download_time = settings.Get("global", f"{folder}_downloaded", 0)
         download_time = 0 if download_time is None else float(download_time)
         try:
-            if time.time() - download_time > 86400: # = 1 day
-                print(f"{GREEN} -- Please wait, we need to redownload the following submodule: {YELLOW} {folder} {GREEN} -- {END}") 
+            if time.time() - download_time > 86400:  # = 1 day
+                print(f"{GREEN} -- Please wait, we need to redownload the following submodule: {YELLOW} {folder} {GREEN} -- {END}")
                 DownloadSubmoduleViaCDN(folder, cdn_url, cdn_path)
                 return True
-        except:
+        except Exception as inner_e:
+            logging.exception("Failed to redownload submodule %s: %s", folder, inner_e)
             print(f"{RED} -- Failed to download the submodule: {YELLOW} {folder} {RED} -- {END}")
             
         return False
@@ -100,7 +102,8 @@ def CheckForSubmoduleUpdate(folder: str, cdn_url: str = "", cdn_path: str = ""):
             print(f"{GREEN} -- Please wait, we need to update the following submodule: {YELLOW} {folder} {GREEN} -- {END}")
             ExecuteCommand(f"git -C {folder} pull")
             return True
-    except:
+    except Exception as e:
+        logging.exception("Failed to update / check for updates for submodule %s: %s", folder, e)
         print(f"{YELLOW} -- Failed to update / check for updates for the submodule (remove the corresponding folder in code/app to redownload if possible): {folder} -- {END}")
     
     return False

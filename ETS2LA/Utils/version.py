@@ -34,8 +34,8 @@ def get_commit_url(repo, commit_hash):
             return f"{remote_url}/-/commit/{commit_hash}"
         else:
             return ""
-    except:
-        logging.warning("Unable to get commit URL. Remote URL might not be set or is not supported.")
+    except Exception as e:
+        logging.warning("Unable to get commit URL. Remote URL might not be set or is not supported: %s", e)
         return ""
 
 def CheckForUpdate():
@@ -98,9 +98,8 @@ def CheckForUpdate():
             return updates
         else:
             return False
-    except:
-        import traceback
-        traceback.print_exc()
+    except Exception as e:
+        logging.exception("Failed to check for updates: %s", e)
         return False
     
 commits_save = []
@@ -153,8 +152,8 @@ def GetHistory():
                                     save_avatar_url_to_cache(commit.author.name, avatar_url)
                                 else:
                                     authors[commit.author.name] = "https://github.com/favicon.ico"
-                            except:
-                                print(f"Github API request was unsuccessful for author: {commit.author.name}. (Timed out)")
+                            except requests.RequestException as e:
+                                logging.exception("Github API request unsuccessful for author %s: %s", commit.author.name, e)
                                 authors[commit.author.name] = "https://github.com/favicon.ico"
                     
                     commit_data["picture"] = authors[commit.author.name]
@@ -163,9 +162,8 @@ def GetHistory():
 
         commits_save = commits
         return commits
-    except:
-        import traceback
-        traceback.print_exc()
+    except Exception as e:
+        logging.exception("Failed to get history: %s", e)
         return []
     
 def Update():

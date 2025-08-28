@@ -13,10 +13,10 @@ try:
     STEAM_INSTALL_FOLDER = winreg.QueryValueEx(winreg.OpenKey(winreg.HKEY_CURRENT_USER, "SOFTWARE\\Valve\\Steam"), "SteamPath")[0]
     if variables.DEVELOPMENT_MODE:
         logging.info(f"Found registery key for Steam install folder: {STEAM_INSTALL_FOLDER}")
-except:
+except OSError as e:
     STEAM_INSTALL_FOLDER = r"C:\Program Files (x86)\Steam"
     if variables.DEVELOPMENT_MODE:
-        logging.warning(f"Could not find registery key for Steam install folder, using default: {STEAM_INSTALL_FOLDER}")
+        logging.warning(f"Could not find registery key for Steam install folder, using default: {STEAM_INSTALL_FOLDER}. Error: {e}")
 
 LIBRARY_FOLDER_LOCATION = r"steamapps\libraryfolders.vdf"
 SECONDARY_LIBRARY_FOLDER_LOCATION = r"D:\Program Files (x86)\Steam\steamapps\libraryfolders.vdf"
@@ -45,7 +45,8 @@ def ReadSteamLibraryFolders():
 def FindSCSGames():
     try:
         libraries = ReadSteamLibraryFolders()
-    except:
+    except Exception as e:
+        logging.exception("Failed to read Steam library folders: %s", e)
         libraries = [r"C:\Games"]
     foundGames = []
     
@@ -65,8 +66,9 @@ if os.name == "nt":
             ms = info['FileVersionMS']
             ls = info['FileVersionLS']
             return HIWORD(ms), LOWORD(ms), HIWORD(ls), LOWORD(ls)
-        except:
-            return 0,0,0,0
+        except OSError as e:
+            logging.exception("Failed to get version number for %s: %s", filename, e)
+            return 0, 0, 0, 0
 
 def GetVersionForGame(gamePath):
     if os.name != "nt":

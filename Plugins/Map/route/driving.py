@@ -279,6 +279,6 @@ def GetSteering():
             return angle * 2 * multiplier
         else:
             return 0
-    except:
-        logging.exception("Error in GetSteering")
+    except Exception as e:
+        logging.exception("Error in GetSteering: %s", e)
         return 0

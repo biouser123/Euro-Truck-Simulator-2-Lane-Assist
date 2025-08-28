@@ -71,36 +71,36 @@ class Module(ETS2LAModule):
                     print("Capture Session Closed")
                 
                 try:
-                    cam_process.stop() # type: ignore
-                except:
-                    pass
+                    cam_process.stop()  # type: ignore
+                except Exception as e:
+                    logging.exception("Failed to stop previous capture process: %s", e)
                 
                 cam_process = capture.start_free_threaded()
                 print("Screen Capture using windows_capture")
                 logging.debug("Screen Capture using windows_capture")
                 return # We are using windows_capture instead of bettercam
-            except:
-                pass
+            except Exception as e:
+                logging.exception("windows_capture initialization failed: %s", e)
                 
             
             import bettercam
             if cam is not None:
                 try:
-                    cam.stop() # stop the old instance of cam
-                except:
-                    pass
+                    cam.stop()  # stop the old instance of cam
+                except Exception as e:
+                    logging.exception("Failed to stop camera: %s", e)
                 try:
-                    cam.close() # close the old instance of cam
-                except:
-                    pass
+                    cam.close()  # close the old instance of cam
+                except Exception as e:
+                    logging.exception("Failed to close camera: %s", e)
                 try:
-                    cam.release() # release the old instance of cam
-                except:
-                    pass
+                    cam.release()  # release the old instance of cam
+                except Exception as e:
+                    logging.exception("Failed to release camera: %s", e)
                 try:
                     del cam
-                except:
-                    pass
+                except Exception as e:
+                    logging.exception("Failed to delete camera reference: %s", e)
             
             cam = bettercam.create(output_idx=CamSetupDisplay)
             if mode == "continuous":
@@ -184,13 +184,13 @@ class Module(ETS2LAModule):
                         croppedImg = img[self.monitor_y1:self.monitor_y2, self.monitor_x1:self.monitor_x2]
                         return croppedImg, img
                     
-            except:
+            except Exception as e:
                 import traceback
                 logging.exception(traceback.format_exc())
                 try:
                     return (None, None) if imgtype != "cropped" and imgtype != "full" else None
-                except:
-                    pass
+                except Exception as inner_e:
+                    logging.exception("Failed to return fallback image: %s", inner_e)
     else: # Linux
         def run(imgtype:str = "both"):
             """imgtype: "both", "cropped", "full" """
@@ -214,10 +214,10 @@ class Module(ETS2LAModule):
                 else:
                     croppedImg = img[self.monitor_y1:self.monitor_y2, self.monitor_x1:self.monitor_x2]
                     return croppedImg, img
-            except:
+            except Exception as e:
                 import traceback
                 logging.exception(traceback.format_exc())
                 try:
                     return (None, None) if imgtype != "cropped" and imgtype != "full" else None
-                except:
-                    pass
+                except Exception as inner_e:
+                    logging.exception("Failed to return fallback image: %s", inner_e)

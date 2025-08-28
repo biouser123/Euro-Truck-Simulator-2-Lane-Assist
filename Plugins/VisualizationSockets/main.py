@@ -213,7 +213,8 @@ class SettingsMenu(ETS2LAPage):
             s.connect(("8.8.8.8", 80))
             IP = s.getsockname()[0]
             s.close()
-        except:
+        except OSError as e:
+            logging.exception("Failed to determine IP address: %s", e)
             IP = "127.0.0.1"
 
         TitleAndDescription(
@@ -254,7 +255,8 @@ class SettingsMenu(ETS2LAPage):
         
         try:
             clients = self.plugin.connected_clients
-        except:
+        except AttributeError as e:
+            logging.exception("Plugin not ready: %s", e)
             Text(_("Waiting for plugin to load..."), styles.Classname("font-bold"))
             return
         
@@ -661,21 +663,21 @@ class Plugin(ETS2LAPlugin):
             for websocket, connection in list(self.connected_clients.items()):
                 if not connection.acknowledged:
                     continue
-                
+
                 for channel in connection.subscribed_channels:
                     try:
                         if channel not in channel_data:
                             if channel not in self.channel_data_calls:
                                 logging.warning(f"Channel {channel} not implemented.")
-                                continue    
+                                continue
                             channel_data[channel] = self.channel_data_calls[channel](self, api_data)
-                            
+
                         message = self.create_socket_message(channel, channel_data[channel])
                         asyncio.run_coroutine_threadsafe(connection.queue.put(json.dumps(message)), self.loop)
-                        
+
                     except Exception as e:
                         logging.warning(f"Error sending data to client: {str(e)} on channel {channel}.")
-                
+
                 connection.acknowledged = False
-        except:
-            pass # Got disconnected while iterating over the clients.
+        except RuntimeError as e:
+            logging.exception("Client iteration failed: %s", e)  # Got disconnected while iterating over the clients.

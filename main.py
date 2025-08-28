@@ -8,6 +8,7 @@ import multiprocessing.process
 import os
 import sys
 import subprocess
+import logging
 
 if os.name == "nt":
     import ctypes
@@ -20,12 +21,14 @@ if os.name == "nt":
             )
             input("Press enter to exit...")
             sys.exit(1)
-    except:
-        pass
+    except Exception as e:
+        # Log the failure to check admin privileges, then continue without crashing
+        logging.exception("Admin privilege check failed: %s", e)
 
 # This try/except block will either end in a successful import, update, or error
-try: from ETS2LA.Utils.translator import _
-except: # Ensure the current PATH contains the install directory.
+try:
+    from ETS2LA.Utils.translator import _
+except ImportError:  # Ensure the current PATH contains the install directory.
     sys.path.append(os.path.dirname(__file__))
     try:
         from ETS2LA.Utils.translator import _
@@ -33,11 +36,12 @@ except: # Ensure the current PATH contains the install directory.
         print("Import errors in ETS2LA/Utils/translator.py, this is a common sign of missing modules. An update will be triggered to install these modules.")
         subprocess.run("update.bat", shell=True, env=os.environ.copy())
         from ETS2LA.Utils.translator import _
-    except Exception as e: # Unexpected error, print it and exit
+    except Exception as e:  # Unexpected error, print it and exit
         try:
             import traceback
             print(traceback.format_exc())
-        except:
+        except Exception as inner_e:
+            logging.exception("Traceback formatting failed: %s", inner_e)
             print(str(e))
         input("Press enter to exit...")
         sys.exit()
@@ -83,7 +87,8 @@ def get_commit_url(repo: git.Repo, commit_hash: str) -> str:
         remote_url = remote_url.replace('.git', '')
         
         return remote_url + "/commit/" + commit_hash
-    except:
+    except Exception as e:
+        logging.exception("Failed to get commit URL: %s", e)
         return ""
         
 def get_current_version_information() -> dict:
@@ -96,7 +101,8 @@ def get_current_version_information() -> dict:
             "link": get_commit_url(repo, current_hash),
             "time": time.ctime(repo.head.object.committed_date)
         }
-    except:
+    except Exception as e:
+        logging.exception("Failed to get version information: %s", e)
         return {
             "name": "Unknown",
             "link": "Unknown",

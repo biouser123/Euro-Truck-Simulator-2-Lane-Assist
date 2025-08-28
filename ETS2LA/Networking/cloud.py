@@ -35,7 +35,8 @@ def SendCrashReport(type:str, message:str, additional=None):
 
     try:
         send_crash_reports = settings.Get("global", "send_crash_reports", True)
-    except:
+    except Exception as e:
+        logging.exception("Failed to read crash report setting: %s", e)
         send_crash_reports = True
     if send_crash_reports:
 
@@ -58,14 +59,12 @@ def SendCrashReport(type:str, message:str, additional=None):
             data = json.dumps(jsonData)
             try:
                 response = requests.post(url, headers=headers, data=data)
-            except:
-                print("Could not connect to server to send crash report.")
+            except requests.RequestException as e:
+                logging.exception("Could not connect to server to send crash report: %s", e)
                 return False
             return response.status_code == 200
-        except:
-            #import traceback
-            #traceback.print_exc()
-            print("Crash report sending failed.")
+        except Exception as e:
+            logging.exception("Crash report sending failed: %s", e)
             return False
     else:
         print("Crash detected, but crash reporting is disabled.")
@@ -81,7 +80,8 @@ def GetUsername():
         try:
             r = requests.get(url, headers=headers)
             return r.json()["data"]["username"]
-        except Exception: pass
+        except (requests.RequestException, KeyError, ValueError) as e:
+            logging.exception("Failed to get username: %s", e)
         
     return "unknown"    
 
@@ -108,8 +108,8 @@ def StartedJob(job: classes.Job):
 
         try:
             r = requests.post(url, headers=headers, json=data)
-        except:
-            print("Could not connect to server to send job data.")
+        except requests.RequestException as e:
+            logging.exception("Could not connect to server to send job data: %s", e)
             return False
         
         if r.json()["status"] == 200:
@@ -131,8 +131,8 @@ def FinishedJob(job: classes.FinishedJob):
 
         try:
             r = requests.post(url, headers=headers, json=data)
-        except:
-            print("Could not connect to server to send job data.")
+        except requests.RequestException as e:
+            logging.exception("Could not connect to server to send job data: %s", e)
             return False
         
         if r.json()["status"] == 200:
@@ -154,8 +154,8 @@ def CancelledJob(job: classes.CancelledJob):
 
         try:
             r = requests.post(url, headers=headers, json=data)
-        except:
-            print("Could not connect to server to send job data.")
+        except requests.RequestException as e:
+            logging.exception("Could not connect to server to send job data: %s", e)
             return False
         
         if r.json()["status"] == 200:
@@ -173,8 +173,8 @@ def Ping(data = [0]):
         url = URL + f'/tracking/ping/{user_id}'
         try:
             requests.get(url)
-        except Exception: 
-            pass
+        except requests.RequestException as e:
+            logging.exception("Ping failed: %s", e)
         
         data[0] = time.time()
         
@@ -191,7 +191,8 @@ def GetUniqueUsers(interval: Literal["1h", "6h", "12h", "24h", "1w", "1m"] = "24
         last_unique_data = r.json()["data"]["unique"][interval]
         last_unique_check = time.perf_counter()
         return last_unique_data
-    except:
+    except (requests.RequestException, KeyError, ValueError) as e:
+        logging.exception("Failed to get unique users: %s", e)
         return 0
         
 last_count_check = 0
@@ -207,7 +208,8 @@ def GetUserCount():
         last_count_data = r.json()["data"]["online"]
         last_count_check = time.perf_counter()
         return last_count_data
-    except:
+    except (requests.RequestException, KeyError, ValueError) as e:
+        logging.exception("Failed to get user count: %s", e)
         return 0
     
 last_time_check = 0
@@ -224,5 +226,6 @@ def GetUserTime():
         last_time_data = r.json()["data"]["time_used"]
         last_time_check = time.perf_counter()
         return last_time_data
-    except:
+    except (requests.RequestException, KeyError, ValueError) as e:
+        logging.exception("Failed to get user time: %s", e)
         return 0

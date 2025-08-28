@@ -9,6 +9,7 @@ import winreg
 import traceback
 import ctypes.wintypes
 from ETS2LA.Networking.cloud import SendCrashReport
+import logging
 
 RED = "\033[91m"
 NORMAL = "\033[0m"
@@ -29,7 +30,8 @@ def get_paths():
 
     try:
         STEAM_PATH = winreg.QueryValueEx(winreg.OpenKey(winreg.HKEY_CURRENT_USER, "SOFTWARE\\Valve\\Steam"), "SteamPath")[0]
-    except:
+    except OSError as e:
+        logging.exception("Failed to read Steam path from registry: %s", e)
         STEAM_PATH = r"C:/program files (x86)/steam"
     ETS2_STEAM_PATH = STEAM_PATH+r"/steamapps/common/Euro Truck Simulator 2"
     ATS_STEAM_PATH = STEAM_PATH+r"/steamapps/common/American Truck Simulator"

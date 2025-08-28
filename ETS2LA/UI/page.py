@@ -1,6 +1,7 @@
 from ETS2LA.UI import *
 from enum import Enum
 import time
+import logging
 
 class ETS2LAPageLocation(Enum):
     """
@@ -57,9 +58,9 @@ class ETS2LAPage:
             raise TypeError("You must set the 'url' variable to the relative URL of the page.")
         self._json = {}
         try:
-            self.init() # type: ignore # Might or might not exist.
-        except:
-            pass
+            self.init()  # type: ignore # Might or might not exist.
+        except Exception as e:
+            logging.exception("Initialization error in page %s: %s", self.__class__.__name__, e)
     
     def render(self):
         """This method is called when the page is built. Override this method to render the page."""

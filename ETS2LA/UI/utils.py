@@ -1,5 +1,6 @@
 from typing import Literal
 import requests
+import logging
 
 def SendPopup(message: str, type: Literal["info", "warning", "error", "success"] = "info"):
     """ONLY USE THIS OUTSIDE OF PLUGINS. Use self.notify() inside plugins instead!
@@ -9,7 +10,8 @@ def SendPopup(message: str, type: Literal["info", "warning", "error", "success"]
     """
     try:
         requests.post("http://localhost:37520/api/popup", json={"text": message, "type": type}, timeout=0.1)
-    except:
+    except requests.RequestException as e:
+        logging.exception("Failed to send popup: %s", e)
         return False
-    
+
     return True
