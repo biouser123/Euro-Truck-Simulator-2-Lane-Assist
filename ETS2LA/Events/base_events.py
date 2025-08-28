@@ -259,8 +259,8 @@ def ApiThread():
         for callback in api_callbacks:
             try:
                 callback(data)
-            except:
-                logging.exception("Error in callback")
+            except Exception as e:
+                logging.exception("Error in callback: %s", e)
                 
         time.sleep(0.1)
         
@@ -276,8 +276,8 @@ def LogThread():
         for callback in log_callbacks:
             try:
                 callback(new_lines)
-            except:
-                logging.exception("Error in callback")
+            except Exception as e:
+                logging.exception("Error in callback: %s", e)
         
         time.sleep(0.1)
 

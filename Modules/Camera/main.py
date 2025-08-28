@@ -20,9 +20,9 @@ class Module(ETS2LAModule):
             size = 36
             try:
                 self.buf = mmap.mmap(0, size, r"Local\ETS2LACameraProps")
-            except:
+            except OSError as e:
                 if time.time() - self.start_time > 5 and not self.message_shown:
-                    logging.warning("ETS2LACameraProps buffer not found. Make sure the SDK is installed and the game is running. This plugin will wait until the buffer is available.")
+                    logging.warning("ETS2LACameraProps buffer not found. Make sure the SDK is installed and the game is running. This plugin will wait until the buffer is available. Error: %s", e)
                     self.message_shown = True
                     
             time.sleep(1)
@@ -44,8 +44,8 @@ class Module(ETS2LAModule):
             )
             
             return camera_data
-        except:
-            logging.exception("Failed to read camera properties")
+        except (struct.error, ValueError) as e:
+            logging.exception("Failed to read camera properties: %s", e)
             return None
     
     def run(self):

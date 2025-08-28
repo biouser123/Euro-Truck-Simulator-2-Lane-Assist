@@ -6,6 +6,7 @@ from ETS2LA import variables
 from ETS2LA.Utils.translator import _
 import ETS2LA.Utils.settings as settings
 import Plugins.Map.data as data
+import logging
 
 class SettingsMenu(ETS2LAPage):
     url = "/settings/map"
@@ -174,7 +175,9 @@ class SettingsMenu(ETS2LAPage):
                 for key, data in index.items():
                     try:
                         config = dh.GetConfig(data["config"])
-                    except: pass
+                    except Exception as e:
+                        logging.exception("Failed to get config for %s: %s", key, e)
+                        config = {}
                     if config != {}:
                         configs[key] = config
                         
@@ -258,10 +261,16 @@ class SettingsMenu(ETS2LAPage):
                             with Container(style=styles.FlexVertical() + styles.Gap("4px") + styles.Padding("0px")):
                                 Text("Backend Data:")
                                 Space()
-                                try: Text(f"State: {self.plugin.state.text}, {self.plugin.state.progress:.0f}", styles.Description() + styles.Classname("text-xs"))
-                                except: Text("State: N/A", styles.Description() + styles.Classname("text-xs"))
-                                try: Text(f"FPS: {1/self.plugin.performance[-1][1]:.0f}", styles.Description() + styles.Classname("text-xs"))
-                                except: Text("FPS: Still loading...", styles.Description() + styles.Classname("text-xs"))
+                                try:
+                                    Text(f"State: {self.plugin.state.text}, {self.plugin.state.progress:.0f}", styles.Description() + styles.Classname("text-xs"))
+                                except AttributeError as e:
+                                    logging.exception("Plugin state unavailable: %s", e)
+                                    Text("State: N/A", styles.Description() + styles.Classname("text-xs"))
+                                try:
+                                    Text(f"FPS: {1/self.plugin.performance[-1][1]:.0f}", styles.Description() + styles.Classname("text-xs"))
+                                except (AttributeError, ZeroDivisionError) as e:
+                                    logging.exception("FPS not available: %s", e)
+                                    Text("FPS: Still loading...", styles.Description() + styles.Classname("text-xs"))
                         else:
                             self.refresh_rate = 10
                             Text("Plugin not loaded, cannot display debug data.", styles.Description() + styles.Classname("text-xs"))

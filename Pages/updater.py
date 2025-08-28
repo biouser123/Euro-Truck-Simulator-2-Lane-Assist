@@ -1,4 +1,5 @@
 from ETS2LA.UI import *
+import logging
 
 from ETS2LA.Networking.Servers.webserver import mainThreadQueue
 from ETS2LA.Utils.version import CheckForUpdate, Update
@@ -19,8 +20,8 @@ class Page(ETS2LAPage):
     def update(self, *args, **kwargs):
         try:
             TriggerEvent("Update App")
-        except:
-            pass
+        except Exception as e:
+            logging.exception("Failed to trigger update event: %s", e)
         mainThreadQueue.append([Update, [], {}])
         
     def open_event(self):

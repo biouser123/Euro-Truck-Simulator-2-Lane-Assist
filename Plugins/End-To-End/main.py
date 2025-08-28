@@ -1,5 +1,6 @@
 from ETS2LA.Plugin import *
 from ETS2LA.UI import *
+import logging
 
 
 PURPLE = "\033[95m"
@@ -273,9 +274,9 @@ class Plugin(ETS2LAPlugin):
                 DestinationPoints = np.float32([[0, 0], [CroppedWidth, 0], [0, CroppedHeight], [CroppedWidth, CroppedHeight]])
                 Matrix = cv2.getPerspectiveTransform(SourcePoints, DestinationPoints)
                 Frame = cv2.warpPerspective(Frame, Matrix, (CroppedWidth, CroppedHeight))
-            except:
+            except (cv2.error, MemoryError) as e:
                 # It sometimes happens that it tries to generate a frames which needs gigabytes of memory which will result in a crash, we can just ignore it.
-                pass
+                logging.exception("Failed to warp perspective: %s", e)
 
         EnableKeyPressed = keyboard.is_pressed(EnableKey)
         if EnableKeyPressed == False and LastEnableKeyPressed == True:

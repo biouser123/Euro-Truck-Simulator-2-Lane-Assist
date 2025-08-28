@@ -38,4 +38,5 @@ def check_for_changes():
             state[file] = current_mtime
             try:
                 module.on_reload()
-            except: pass
+            except Exception as e:
+                logging.exception("Module reload callback failed: %s", e)

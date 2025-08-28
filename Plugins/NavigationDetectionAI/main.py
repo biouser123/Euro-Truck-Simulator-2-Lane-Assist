@@ -1,5 +1,6 @@
 from ETS2LA.Plugin import *
 from ETS2LA.UI import *
+import logging
 
 def GetTextSize(text="NONE", text_width=100, max_text_height=100):
     fontscale = 1
@@ -157,9 +158,10 @@ class Plugin(ETS2LAPlugin):
         try:
             IndicatorLeft = APIDATA["truckBool"]["blinkerLeftActive"]
             IndicatorRight = APIDATA["truckBool"]["blinkerRightActive"]
-        except:
+        except (KeyError, TypeError) as e:
             IndicatorLeft = False
             IndicatorRight = False
+            logging.exception("Failed to read blinker state: %s", e)
 
         if Enabled == True:
             if LeftIndicator != IndicatorLeft and IndicatorLeftWaitForResponse == False:

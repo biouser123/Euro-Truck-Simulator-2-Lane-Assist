@@ -2,6 +2,7 @@ import ETS2LA.variables as variables
 from typing import Literal
 import time
 import os
+import logging
 
 start_time = time.perf_counter()
 
@@ -40,11 +41,17 @@ def update_logs(game: Literal["ets2", "ats"]):
 
 def get_new_lines():
     global last_ets2_update, last_ats_update
-    try: ets2_time = os.path.getmtime(ets2_path)
-    except: ets2_time = 0
-    
-    try: ats_time = os.path.getmtime(ats_path)
-    except: ats_time = 0
+    try:
+        ets2_time = os.path.getmtime(ets2_path)
+    except OSError as e:
+        logging.exception("Failed to get ETS2 log mtime: %s", e)
+        ets2_time = 0
+
+    try:
+        ats_time = os.path.getmtime(ats_path)
+    except OSError as e:
+        logging.exception("Failed to get ATS log mtime: %s", e)
+        ats_time = 0
     
     new_lines = []
     if ets2_time > last_ets2_update:

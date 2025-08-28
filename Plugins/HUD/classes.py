@@ -59,7 +59,7 @@ class ElementRunner():
         # Try to find "Renderer" or "Widget" class in the module
         try:
             self.element = module.Renderer(plugin)
-        except:
+        except AttributeError:
             try:
                 self.element = module.Widget(plugin)
             except AttributeError:

@@ -311,8 +311,9 @@ class Plugin(ETS2LAPlugin):
                     self.speak(_("Map steering disabled."))
 
                 self.map_enabled = state
-        except:
+        except (KeyError, AttributeError, TypeError) as e:
             self.map_enabled = False
+            logging.exception("Failed to get map state: %s", e)
 
     def acc_enabled_disabled(self):
         """
@@ -327,8 +328,9 @@ class Plugin(ETS2LAPlugin):
                     self.speak(_("Adaptive Cruise Control disabled."))
 
                 self.acc_enabled = state
-        except:
+        except (KeyError, AttributeError, TypeError) as e:
             self.acc_enabled = False
+            logging.exception("Failed to get ACC state: %s", e)
             
     def closest_city_changed(self):
         """
@@ -345,8 +347,9 @@ class Plugin(ETS2LAPlugin):
                     round(distance)
                 ).format(city=city, distance=round(distance))
                 self.speak(text)
-        except:
+        except AttributeError as e:
             self.closest_city = None
+            logging.exception("Failed to determine closest city: %s", e)
             
     def speedlimit_changed(self, api):
         """
@@ -361,8 +364,9 @@ class Plugin(ETS2LAPlugin):
                     "Speed limit changed to {0} kilometers per hour.",
                     round(speed_limit)
                 ).format(round(speed_limit)))
-        except:
+        except (KeyError, TypeError) as e:
             self.speed_limit = 0
+            logging.exception("Failed to read speed limit: %s", e)
             
     def fuel_check(self, api):
         try:
@@ -386,27 +390,29 @@ class Plugin(ETS2LAPlugin):
                 self.has_notified_critical_fuel = False
             elif fuel >= 50:
                 self.has_notified_critical_fuel = False
-        except:
+        except (KeyError, TypeError) as e:
             self.has_notified_fuel = False
             self.has_notified_critical_fuel = False
+            logging.exception("Failed to read fuel range: %s", e)
 
     def route_distance(self, api):
         try:
-            route_distance = api["truckFloat"]["routeDistance"] / 1000 # Meters to Kilometers
+            route_distance = api["truckFloat"]["routeDistance"] / 1000  # Meters to Kilometers
 
             for distance in self.notified_distances:
                 if route_distance <= distance and distance not in self.notified_markers:
                     if self.last_route_distance > 0 and route_distance < self.last_route_distance:
                         self.speak(_("It's {0} kilometers to the next waypoint.").format(round(distance)))
                         self.notified_markers.add(distance)
-            
+
             if route_distance > self.last_route_distance + 50:
                 self.notified_markers.clear()
-            
+
             self.last_route_distance = route_distance
-        except:
+        except (KeyError, TypeError) as e:
             self.last_route_distance = 0
             self.notified_markers.clear()
+            logging.exception("Failed to read route distance: %s", e)
 
     def damage_check(self, api):
         try:
@@ -435,13 +441,14 @@ class Plugin(ETS2LAPlugin):
             if wear_cargo > self.last_wear_cargo:
                 self.speak(_("Cargo damage is now at {0}%.").format(wear_cargo))
                 self.last_wear_cargo = wear_cargo
-        except:
+        except (KeyError, TypeError) as e:
             self.last_wear_cargo = 0
             self.last_wear_engine = 0
             self.last_wear_chassis = 0
             self.last_wear_transmission = 0
             self.last_wear_wheels = 0
             self.last_wear_cabin = 0
+            logging.exception("Failed to read wear data: %s", e)
 
     def status(self, api):
         try:
@@ -451,7 +458,8 @@ class Plugin(ETS2LAPlugin):
             distance = round(api["truckFloat"]["routeDistance"] / 1000)
 
             self.speak(_("Speed {0} kilometers per hour, limit {1}, fuel {2}%, and it's {3} kilometers to the next waypoint.").format(speed, speed_limit, fuel, distance))
-        except Exception as e:
+        except (KeyError, TypeError) as e:
+            logging.exception("Error while processing status: %s", e)
             self.speak(f"Error while processing status {e}")
 
     def update_beeper(self, api):

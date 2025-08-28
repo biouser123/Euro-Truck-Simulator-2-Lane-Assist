@@ -8,6 +8,7 @@ import zipfile
 import shutil
 import tqdm
 import os
+import logging
 
 library_path = "ETS2LA/Assets/Libraries/"
 library_urls = {
@@ -37,14 +38,16 @@ def CheckForMaliciousPackages():
                 ExecuteCommand(f"pip uninstall {package} -y & pip cache purge & pip install {package} --force-reinstall")
                 cloud.SendCrashReport(package, f"Successfully updated a malicious package.", f"From version {ver} to the latest version.")
                 print(GREEN + f"Successfully updated the '{package}' package to the latest version." + END)
-        except:
+        except Exception as e:
             cloud.SendCrashReport(package, "Update malicious package error.", traceback.format_exc())
+            logging.exception("Failed to check package %s: %s", package, e)
             print(RED + f"Unable to check the version of the '{package}' package. Please update your '{package}' package manually if you have one of these versions installed: {malicious_packages[package]}" + END)
 
 def FixModule(module, ver, url):
     try:
         cur_ver = version(module)
-    except:
+    except Exception as e:
+        logging.exception("Failed to read module version for %s: %s", module, e)
         cur_ver = "0.0.0"
         
     if cur_ver < ver:

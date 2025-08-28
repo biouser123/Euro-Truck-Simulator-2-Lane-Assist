@@ -3,6 +3,7 @@ import multiprocessing
 import threading
 import psutil
 import time
+import logging
 
 descriptions = {
     "trucksbook": "Trucksbook will invalidate any jobs you do while having ETS2LA running / the SDK installed.",
@@ -145,7 +146,8 @@ class Page(ETS2LAPage):
                 try:
                     for key, value in self.data["plugin_mem_usage"].items():
                         tooltip_text += f"┃  {key}: {round(value * self.data['ram'].total / 100 / 1024 ** 3,1)} GB\n"
-                except: pass
+                except Exception as e:
+                    logging.exception("Failed to append plugin memory usage: %s", e)
                 
                 if per_type[1] > 0:
                     tooltip_text += "┃\n"

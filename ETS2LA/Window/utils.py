@@ -33,9 +33,14 @@ def get_screen_dimensions(monitor: int = 1) -> tuple[int, int, int, int]:
     """
     try:
         sct = mss.mss()
-        return sct.monitors[monitor]["left"], sct.monitors[monitor]["top"], \
-               sct.monitors[monitor]["width"], sct.monitors[monitor]["height"]
-    except:
+        return (
+            sct.monitors[monitor]["left"],
+            sct.monitors[monitor]["top"],
+            sct.monitors[monitor]["width"],
+            sct.monitors[monitor]["height"],
+        )
+    except Exception as e:
+        logging.exception("Failed to get screen dimensions: %s", e)
         return 0, 0, 1280, 720
 
 
@@ -147,10 +152,12 @@ def get_theme_color() -> str:
                         )
                         
                         return hex_color
-    except:
+    except Exception as e:
+        logging.exception("Failed to read theme color: %s", e)
         try:
             return "#ffffff" if settings.Get("global", "theme", "dark") == "light" else "#18181b"
-        except:
+        except Exception as inner_e:
+            logging.exception("Fallback theme lookup failed: %s", inner_e)
             return "#18181b"
         
     return "#18181b"
@@ -165,12 +172,12 @@ def set_window_icon(image_path: str) -> None:
     try:
         hwnd = win32gui.FindWindow(None, variables.APPTITLE)
         icon_flags = win32con.LR_LOADFROMFILE | win32con.LR_DEFAULTSIZE
-        hicon = win32gui.LoadImage(None, image_path, win32con.IMAGE_ICON, 0, 0, icon_flags) # type: ignore
+        hicon = win32gui.LoadImage(None, image_path, win32con.IMAGE_ICON, 0, 0, icon_flags)  # type: ignore
 
-        win32gui.SendMessage(hwnd, win32con.WM_SETICON, win32con.ICON_SMALL, hicon) # type: ignore
-        win32gui.SendMessage(hwnd, win32con.WM_SETICON, win32con.ICON_BIG, hicon)   # type: ignore
-    except:
-        pass
+        win32gui.SendMessage(hwnd, win32con.WM_SETICON, win32con.ICON_SMALL, hicon)  # type: ignore
+        win32gui.SendMessage(hwnd, win32con.WM_SETICON, win32con.ICON_BIG, hicon)  # type: ignore
+    except Exception as e:
+        logging.exception("Failed to set window icon: %s", e)
 
 
 def color_title_bar(theme: Literal["dark", "light"] = "dark"):
@@ -268,8 +275,8 @@ if os.name == 'nt':
         try:
             scale_factor = windll.shcore.GetScaleFactorForDevice(0)
             return scale_factor / 100.0
-        except:
-            logging.exception("Failed to get Windows scaling factor")
+        except Exception as e:
+            logging.exception("Failed to get Windows scaling factor: %s", e)
             return 1.0  # Fallback to no scaling
 
 queue: multiprocessing.JoinableQueue = variables.WINDOW_QUEUE

@@ -11,9 +11,9 @@ try:
     umami.set_url_base("https://umami.ets2la.com")
     umami.set_website_id("ca602362-299b-4222-9ea5-bbd2610488b3")
     umami.set_hostname("app.ets2la.com")
-except:
+except ImportError as e:
     umami = None
-    logging.warning("Failed to import umami.")
+    logging.warning("Failed to import umami: %s", e)
 
 def TriggerEvent(event: str, data: dict | None = None):
     try:
@@ -27,5 +27,5 @@ def TriggerEvent(event: str, data: dict | None = None):
                     event_name=event,
                     custom_data=data   
                 )
-    except:
-        pass
+    except Exception as e:
+        logging.exception("Failed to trigger umami event: %s", e)

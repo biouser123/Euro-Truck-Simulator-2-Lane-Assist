@@ -11,6 +11,7 @@ import time
 import yaml
 import git
 import os
+import logging
 
 class CataloguePlugin():
     name: str
@@ -220,8 +221,8 @@ class Page(ETS2LAPage):
                             file_path = os.path.join(root, file)
                             try:
                                 os.chmod(file_path, 0o666)  # Magic value = writable by all
-                            except:
-                                pass
+                            except OSError as e:
+                                logging.exception("Failed to change permissions for %s: %s", file_path, e)
                     
                     shutil.rmtree(f"CataloguePlugins/{target.name}")
                     success = True

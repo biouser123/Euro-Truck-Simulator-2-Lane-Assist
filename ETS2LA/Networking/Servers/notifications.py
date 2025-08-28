@@ -77,21 +77,24 @@ async def server(websocket, path) -> None:
         while True:
             # Blocking until a message is received
             # or the connection is closed.
-            try: message = await websocket.recv()
-            except: break
+            try:
+                message = await websocket.recv()
+            except websockets.ConnectionClosed as e:
+                logging.exception("Websocket closed: %s", e)
+                break
             
             # Handle the message
-            if message != None:
+            if message is not None:
                 try:
                     message = json.loads(message)
-                except: pass
+                except json.JSONDecodeError as e:
+                    logging.exception("Failed to decode message: %s", e)
 
                 with condition:
                     connected[websocket] = message
                     condition.notify_all()
-    except:
+    except Exception as e:
         logging.exception(_("An error occurred while processing a message."))
-        pass
     
     finally:
         # Remove the websocket from the connected list

@@ -6,6 +6,7 @@ import numpy as np
 import math
 import time
 import cv2
+import logging
 
 
 def initialize():
@@ -145,8 +146,8 @@ def run():
             Matrix = cv2.getPerspectiveTransform(SourcePoints, DestinationPoints)
             Frame = cv2.warpPerspective(CroppedFrame, Matrix, (500, 500), flags=cv2.INTER_NEAREST)
             Images.append((Frame, Points))
-        except:
-            pass
+        except (cv2.error, ValueError) as e:
+            logging.exception("Failed to transform perspective: %s", e)
 
     Canvas = FRAME.copy()
     CenterX, CenterZ = 250, 250

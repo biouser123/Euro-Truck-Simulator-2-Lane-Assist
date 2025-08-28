@@ -1,5 +1,6 @@
 from ETS2LA.Plugin import *
 from ETS2LA.UI import *
+import logging
 
 
 PURPLE = "\033[95m"
@@ -340,10 +341,10 @@ class Plugin(ETS2LAPlugin):
             for i, (_, _, ID, _) in enumerate(TrafficLights):
                 if ID not in Exists:
                     del TrafficLights[i]
-        except:
+        except Exception as e:
             EXC = traceback.format_exc()
             SendCrashReport("TrafficLightDetection - Tracking/AI Error.", str(EXC))
-            print("TrafficLightDetection - Tracking/AI Error: " + str(EXC))
+            logging.exception("TrafficLightDetection - Tracking/AI Error: %s", e)
 
 
         try:

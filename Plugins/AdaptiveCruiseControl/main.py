@@ -527,8 +527,11 @@ class Plugin(ETS2LAPlugin):
         return valid_lights
     
     def get_traffic_light_in_front(self, api_data: dict) -> ACCTrafficLight:
-        try:    lights = self.modules.Semaphores.run()
-        except: return None
+        try:
+            lights = self.modules.Semaphores.run()
+        except Exception as e:
+            logging.exception("Failed to fetch semaphores: %s", e)
+            return None
         
         points = self.map_points
         
@@ -554,8 +557,11 @@ class Plugin(ETS2LAPlugin):
         return closest_light
     
     def get_next_prefab_traffic_light(self, api_data: dict) -> ACCTrafficLight:
-        try:    live_semaphores = self.modules.Semaphores.run()
-        except: return None
+        try:
+            live_semaphores = self.modules.Semaphores.run()
+        except Exception as e:
+            logging.exception("Failed to fetch live semaphores: %s", e)
+            return None
         
         prefab = self.globals.tags.next_intersection
         prefab = self.globals.tags.merge(prefab)
@@ -606,8 +612,11 @@ class Plugin(ETS2LAPlugin):
         return None
 
     def get_gate_in_front(self, api_data: dict) -> ACCGate:
-        try:    gates = self.modules.Semaphores.run()
-        except: return None
+        try:
+            gates = self.modules.Semaphores.run()
+        except Exception as e:
+            logging.exception("Failed to fetch gates: %s", e)
+            return None
         
         points = self.map_points
         
@@ -856,8 +865,11 @@ class Plugin(ETS2LAPlugin):
             
         self.acceleration.smooth(total * self.sign)
 
-        try:    in_front = self.get_vehicle_in_front(self.api_data)
-        except: in_front = None
+        try:
+            in_front = self.get_vehicle_in_front(self.api_data)
+        except Exception as e:
+            logging.exception("Error getting vehicle in front: %s", e)
+            in_front = None
             
         if not in_front:
             self.globals.tags.vehicle_highlights = []
@@ -865,16 +877,23 @@ class Plugin(ETS2LAPlugin):
         tl_mode = self.settings.get("traffic_light_mode", "Normal")
         
         if tl_mode == "Legacy":
-            try:    traffic_light = self.get_traffic_light_in_front(self.api_data)
-            except: traffic_light = None
-        
+            try:
+                traffic_light = self.get_traffic_light_in_front(self.api_data)
+            except Exception as e:
+                logging.exception("Error getting legacy traffic light: %s", e)
+                traffic_light = None
+
         else:
-            try:    traffic_light = self.get_next_prefab_traffic_light(self.api_data)
-            except: traffic_light = None
+            try:
+                traffic_light = self.get_next_prefab_traffic_light(self.api_data)
+            except Exception as e:
+                logging.exception("Error getting prefab traffic light: %s", e)
+                traffic_light = None
         
-        try:    gate = self.get_gate_in_front(self.api_data)
-        except:
-            logging.exception("Error in gate detection")
+        try:
+            gate = self.get_gate_in_front(self.api_data)
+        except Exception as e:
+            logging.exception("Error in gate detection: %s", e)
             gate = None
         
         target_acceleration = self.calculate_target_acceleration(in_front, traffic_light, gate)

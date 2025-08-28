@@ -1,7 +1,9 @@
+import logging
+
 try:
     from textual.app import App, ComposeResult
     from textual.widgets import Header, Log, Label, Static, Button
-except:
+except ModuleNotFoundError:
     from ETS2LA.Utils.shell import ExecuteCommand
     ExecuteCommand("pip install textual")
     from textual.app import App, ComposeResult
@@ -80,8 +82,8 @@ class Updater(App):
                         try:
                             dimmed_line = f"{line.decode()}"
                             callback(dimmed_line)
-                        except:
-                            pass
+                        except UnicodeDecodeError as e:
+                            logging.exception("Failed to decode updater output: %s", e)
                     else:
                         break
 

@@ -3,6 +3,7 @@ from Plugins.HUD.classes import HUDRenderer
 from ETS2LA.Utils.translator import _
 from Plugins.AR.classes import *
 from ETS2LA.UI import *
+import logging
 
 class Renderer(HUDRenderer):
     name = _("Steering Line")
@@ -127,7 +128,6 @@ class Renderer(HUDRenderer):
                 )
                 
             self.data = steering_data
-        except:
-            logging.exception("Error while drawing steering line")
+        except Exception as e:
+            logging.exception("Error while drawing steering line: %s", e)
             self.data = []
-            pass

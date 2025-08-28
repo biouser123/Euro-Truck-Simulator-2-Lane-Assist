@@ -158,7 +158,8 @@ def Get(plugin, key, default=None):
                             return default
                         else:
                             return None
-                    except:
+                    except Exception as inner_e:
+                        logging.exception("Failed to set default setting: %s", inner_e)
                         return None
                 return None
         
@@ -238,12 +239,12 @@ def Listen(plugin, callback):
                 settings = GetJSON(plugin)
                 try:
                     callback(settings)
-                except:
-                    logging.warning(f"Callback function {callback.__name__} doesn't accept the JSON data as an argument.")
+                except TypeError as e:
+                    logging.warning(f"Callback function {callback.__name__} doesn't accept the JSON data as an argument: {e}")
                     try:
                         callback()
-                    except:
-                        logging.exception("Callback function call unsuccessful.")
+                    except Exception as inner_e:
+                        logging.exception("Callback function call unsuccessful: %s", inner_e)
                 
     import threading
     t = threading.Thread(target=listen, args=(GetFilename(plugin), callback), daemon=True)

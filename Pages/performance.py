@@ -8,6 +8,7 @@ import win32pdh
 import psutil
 import time
 import os
+import logging
 
 # Has to be a class to not lag the main
 # process when collecting data.
@@ -219,8 +220,8 @@ class Page(ETS2LAPage):
                                                     Text(f"Max: {round(1000/minimum, 2) if minimum > 0 else 0} FPS", styles.Description())
                                                     Space(styles.Height("4px"))
                                                     Text(f"-> Stutter: {stutter:.2f}%")
-                                                except:
-                                                    pass
+                                                except Exception as e:
+                                                    logging.exception("Failed to compute plugin stats: %s", e)
                                     
                                     if plugin.frametimes[0] == self.first_times[plugin.description.id]:
                                         Text(_("Warning: Graph is still gathering data, please wait 60 seconds for it to stabilize."), styles.Description() + styles.Classname("text-xs"))
@@ -240,7 +241,8 @@ class Page(ETS2LAPage):
                                             type="area",
                                             style=styles.MaxHeight("150px")
                                         )
-                            except:
+                            except Exception as e:
+                                logging.exception("Failed to render plugin %s: %s", plugin.description.name, e)
                                 Text(_("Failed to render plugin {plugin_name}.", plugin_name=plugin.description.name), styles.Description() + styles.Classname("text-red-500"))
 
             Space(styles.Height("8px"))

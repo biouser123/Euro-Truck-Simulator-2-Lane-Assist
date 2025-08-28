@@ -3,8 +3,9 @@ from ETS2LA.Utils.translator import languages, parse_language
 from ETS2LA.Utils.translator import _
 from langcodes import Language
 from ETS2LA.Utils import settings
-from ETS2LA.Window.utils import get_transparency, get_on_top 
+from ETS2LA.Window.utils import get_transparency, get_on_top
 import time
+import logging
 
 from Pages.sdk_installation import Page as SDKInstallPage
 from Pages.sdk_installation import games, game_versions, files_for_version, CheckIfInstalled
@@ -246,8 +247,11 @@ class Page(ETS2LAPage):
             index = dh.GetIndex()
             configs = {}
             for key, data in index.items():
-                try: config = dh.GetConfig(data["config"])
-                except: continue
+                try:
+                    config = dh.GetConfig(data["config"])
+                except Exception as e:
+                    logging.exception("Failed to load config for %s: %s", key, e)
+                    continue
                 if config != {}:
                     configs[key] = config
             
