@@ -4,7 +4,7 @@ from ETS2LA.UI import *
 from ETS2LA import UI
 
 from ETS2LA.Utils.Game import path as game
-from ETS2LA.Networking.Servers.webserver import mainThreadQueue
+from ETS2LA.Networking.Servers.webserver import mainThreadQueue, mainThreadQueueLock
 from Modules.SDKController.main import SCSController
 from ETS2LA.Utils.translator import _, ngettext, languages, parse_language
 from ETS2LA.Utils.umami import TriggerEvent
@@ -109,7 +109,8 @@ class Page(ETS2LAPage):
             TriggerEvent("Update App")
         except Exception as e:
             logging.exception("Failed to trigger update event: %s", e)
-        mainThreadQueue.append([Update, [], {}])
+        with mainThreadQueueLock:
+            mainThreadQueue.append([Update, [], {}])
     
     def open_event(self):
         self.game_needs_update = {}
@@ -246,4 +247,4 @@ class Page(ETS2LAPage):
                         text=_("Update")
                     )
                     
-            Space(style=styles.Height("60px"))
+                Space(style=styles.Height("60px"))
