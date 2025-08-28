@@ -17,13 +17,16 @@ if os.name == "nt":
             print(
                 "ERROR: ETS2LA is running with Administrator privileges.\n"
                 "This is not recommended, as it may interfere with system behavior or cause unintended issues.\n"
-                "Please restart ETS2LA without Administrator mode."
+                "Please restart ETS2LA without Administrator mode.",
             )
             input("Press enter to exit...")
             sys.exit(1)
+    except (AttributeError, OSError) as e:
+        # Log known failures to check admin privileges and continue without crashing
+        logging.error("Admin privilege check failed: %s", e)
     except Exception as e:
-        # Log the failure to check admin privileges, then continue without crashing
-        logging.exception("Admin privilege check failed: %s", e)
+        # Log unexpected errors with full traceback
+        logging.exception("Unexpected error during admin privilege check: %s", e)
 
 # This try/except block will either end in a successful import, update, or error
 try:
