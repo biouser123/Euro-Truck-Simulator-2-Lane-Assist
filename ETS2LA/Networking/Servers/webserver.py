@@ -26,6 +26,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi import FastAPI, Body
 from typing import Any
+from collections import deque
 import multiprocessing
 import traceback
 import threading
@@ -38,7 +39,8 @@ import zlib
 import time
 
 asked_plugins = False # Will trigger the "Do you want to re-enable plugins?" popup
-mainThreadQueue = []
+mainThreadQueue = deque()
+mainThreadQueueLock = threading.Lock()
 sessionToken = ""
 thread = None
 
@@ -169,6 +171,7 @@ def toggle_fullscreen_from_ui():
     return toggle_fullscreen()
 
 # endregion
+
 # region Plugins
 
 @app.get("/backend/plugins")
@@ -246,7 +249,8 @@ def get_language():
 # region Popups
 @app.post("/api/popup")
 def popup(data: PopupData):
-    mainThreadQueue.append([sonner, [data.text, data.type, None, ], {}])
+    with mainThreadQueueLock:
+        mainThreadQueue.append([sonner, [data.text, data.type, None, ], {}])
     return {"status": "ok"}
 
 # endregion
@@ -277,16 +281,26 @@ def get_plugin_settings(plugin: str):
 
 @app.post("/api/controls/{control}/change")
 def change_control(control: str):
-    mainThreadQueue.append([controls.edit_event, [control], {}])
-    while [controls.edit_event, [control], {}] in mainThreadQueue:
+    item = [controls.edit_event, [control], {}]
+    with mainThreadQueueLock:
+        mainThreadQueue.append(item)
+    while True:
+        with mainThreadQueueLock:
+            if item not in mainThreadQueue:
+                break
         time.sleep(0.01)
         
     return {"status": "ok"}
 
 @app.post("/api/controls/{control}/unbind")
 def unbind_control(control: str):
-    mainThreadQueue.append([controls.unbind_event, [control], {}])
-    while [controls.unbind_event, [control], {}] in mainThreadQueue:
+    item = [controls.unbind_event, [control], {}]
+    with mainThreadQueueLock:
+        mainThreadQueue.append(item)
+    while True:
+        with mainThreadQueueLock:
+            if item not in mainThreadQueue:
+                break
         time.sleep(0.01)
         
     return {"status": "ok"}
@@ -425,3 +439,4 @@ def run():
         logging.info(_("Frontend started at http://{ip}:{port}").format(ip=IP, port=FRONTEND_PORT))
 
 # endregion
+
