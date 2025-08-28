@@ -50,14 +50,15 @@ class PerformanceMetrics:
             
     def get_python_mem(self) -> float:
         total = 0
-        for proc in psutil.process_iter():
+        for proc in psutil.process_iter(attrs=['name', 'memory_percent']):
             try:
-                time.sleep(0.01)
-                if "python" in proc.name().lower(): # backend
-                    total += proc.memory_percent()
+                name = (proc.info.get('name') or '').lower()
+                if 'python' in name:  # backend
+                    mem = proc.info.get('memory_percent') or 0
+                    total += mem
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                pass
-            
+                continue
+
         return total
     
     def ram_thread(self):
