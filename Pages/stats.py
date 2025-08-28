@@ -23,21 +23,18 @@ class PerformanceMetrics:
     def ram_thread(self):
         while True:
             time.sleep(10)
-            total = 0
             python = 0
             node = 0
-            for proc in psutil.process_iter():
+            for proc in psutil.process_iter(attrs=['name', 'memory_percent']):
                 try:
-                    time.sleep(0.01)  # Prevents high CPU usage
-                    if "python" in proc.name().lower(): # backend
-                        total += proc.memory_percent()
-                        python += proc.memory_percent()
-                    if "node" in proc.name().lower():   # frontend
-                        total += proc.memory_percent()
-                        node += proc.memory_percent()
-                        
+                    name = (proc.info.get('name') or '').lower()
+                    mem = proc.info.get('memory_percent') or 0
+                    if 'python' in name:  # backend
+                        python += mem
+                    if 'node' in name:    # frontend
+                        node += mem
                 except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                    pass
+                    continue
                 
             self.output.put({
                 "ram": {
